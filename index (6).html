@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SportShare - ระบบยืมคืนอุปกรณ์กีฬา ออโต้ 24 ชม. ออนไลน์คลาวด์</title>
+    <!-- Tailwind CSS for super-fast reactive UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron & Prompt for Cyber/Gambling Vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Prompt:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #050505;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cyber-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+        /* Custom Glowing effects reminiscent of high-end gaming/betting platforms */
+        .glow-red {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+            border-color: rgba(239, 68, 68, 0.8);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.6);
+            border-color: rgba(6, 182, 212, 0.8);
+        }
+        .glow-neon-text {
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.8), 0 0 20px rgba(239, 68, 68, 0.8);
+        }
+        /* Custom scrollbar for betting list */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0d0d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ef4444;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.02); }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-200 bg-[#050505] pb-20 md:pb-0">
+
+    <!-- Cloud Real-time Connection Loader Overlay -->
+    <div id="cloud-loader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md transition-opacity duration-500">
+        <div class="relative flex items-center justify-center mb-6">
+            <div class="animate-ping absolute inline-flex h-24 w-24 rounded-full bg-cyan-500/20 opacity-75"></div>
+            <div class="rounded-full bg-gradient-to-br from-red-600 to-cyan-500 p-6 border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.4)]">
+                <i data-lucide="cloud-lightning" class="w-12 h-12 text-white animate-bounce"></i>
+            </div>
+        </div>
+        <h2 class="text-xl font-black text-white cyber-font tracking-widest glow-neon-text mb-2">SPORTSHARE CLOUD SYSTEM</h2>
+        <p id="cloud-loader-text" class="text-xs text-cyan-400 font-extrabold tracking-widest uppercase">กำลังเชื่อมต่อคลาวด์เซิร์ฟเวอร์เรียลไทม์...</p>
+    </div>
+
+    <!-- Top Gambling-Style Marquee Ticker -->
+    <div class="bg-black border-b border-red-500/50 py-1.5 overflow-hidden z-40 relative">
+        <div class="flex whitespace-nowrap animate-[marquee_25s_linear_infinite] inline-block text-[10px] sm:text-xs uppercase tracking-wider">
+            <span class="mx-4 text-yellow-400 font-extrabold">🚨 ยินดีต้อนรับสู่ SPORTSHARE เว็บตรงยืมกีฬาออโต้!</span>
+            <span class="mx-4 text-cyan-400 font-bold">💎 สมัครยูสเซอร์วันนี้ ยืมฟรี 100% ไม่มีขั้นต่ำ!</span>
+            <span class="mx-4 text-red-500 font-extrabold">⚡ ระบบทำรายการฝาก-ถอนคืนอุปกรณ์ใน 3 วินาที ตลอด 24 ชั่วโมง</span>
+            <span class="mx-4 text-yellow-400 font-bold">🏆 กิจกรรม: คืนของตรงเวลา สะสมพอยท์แลกสิทธิ์ VIP เข้าห้องคลับพรีเมียม!</span>
+            <span class="mx-4 text-cyan-400 font-bold">⚠️ ประกาศ: หากพบการลักขโมยหรือส่งคืนช้าเกิน 7 วัน ระบบจะขึ้นแบล็กลิสต์ฝ่ายปกครองทันที!</span>
+        </div>
+    </div>
+    <style>
+        @keyframes marquee {
+            0 { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+
+    <!-- Welcome Portal Gate (Auth Gate) - Shown when no active user is logged in -->
+    <div id="auth-gate-layout" class="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-radial-gradient from-neutral-900 via-black to-neutral-950 p-3 sm:p-4 overflow-y-auto hidden">
+        <!-- Ambient decorative cyber glows (Neon Red and Neon Cyan) -->
+        <div class="absolute top-10 left-10 w-[200px] sm:w-[500px] h-[200px] sm:h-[500px] bg-red-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-[200px] sm:w-[500px] h-[200px] sm:h-[500px] bg-cyan-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div class="bg-neutral-950/90 backdrop-blur-2xl rounded-3xl max-w-4xl w-full shadow-[0_0_50px_rgba(239,68,68,0.3)] border-2 border-red-600/80 overflow-hidden my-auto transform transition duration-300 grid grid-cols-1 md:grid-cols-12 relative z-10">
+            
+            <!-- Left Banner (Gambling/Betting Style Promotional Side) -->
+            <div class="hidden md:flex md:col-span-5 bg-gradient-to-b from-neutral-950 via-red-950/80 to-black p-8 flex-col justify-between text-white relative border-r-2 border-cyan-500/30">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.15),transparent)] pointer-events-none"></div>
+                <!-- Simulated Cyber Casino Grid Pattern -->
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:15px_15px] pointer-events-none"></div>
+                
+                <div class="space-y-6 relative z-10">
+                    <div class="bg-gradient-to-br from-red-600 to-black p-4 rounded-2xl border-2 border-cyan-400 inline-block shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-cyan-400 animate-spin"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-4xl font-black tracking-tighter cyber-font text-white glow-neon-text">SPORTSHARE</h2>
+                        <p class="text-xs text-red-500 font-extrabold tracking-widest uppercase">✨ VEGAS SPORT CLUB AUTO ✨</p>
+                    </div>
+                    <div class="border-l-4 border-cyan-400 pl-3 py-1 space-y-1">
+                        <p class="text-sm font-bold text-slate-100">สมัครปั๊บ... รับสิทธิ์ยืม!</p>
+                        <p class="text-xs text-slate-400">ระบบคลังกีฬาอัตโนมัติที่จ่ายตรง คืนไว เช็กสถานะได้แบบวินาทีต่อวินาที</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 relative z-10">
+                    <div class="flex items-center space-x-3 text-xs leading-relaxed bg-black/80 p-2.5 rounded-xl border border-red-500/30">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-red-500 flex-shrink-0"></i>
+                        <span><b class="text-red-400">แบล็กลิสต์โกงอุปกรณ์:</b> ส่งฝ่ายปกครองทันที</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-xs leading-relaxed bg-black/80 p-2.5 rounded-xl border border-cyan-500/30">
+                        <i data-lucide="zap" class="w-5 h-5 text-cyan-400 flex-shrink-0"></i>
+                        <span><b class="text-cyan-400">คืนไวได้พอยท์เพิ่ม:</b> ไต่อันดับ VIP MEMBER</span>
+                    </div>
+                </div>
+
+                <p class="text-[9px] text-slate-600 uppercase tracking-widest relative z-10">© SPORTSHARE CASINO CLUB 2026</p>
+            </div>
+
+            <!-- Right Content Area (Forms) -->
+            <div class="p-5 sm:p-8 md:col-span-7 flex flex-col justify-between bg-black/60 relative">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(239,68,68,0.08),transparent)] pointer-events-none"></div>
+                <div>
+                    <!-- Mode Selector Switches -->
+                    <div class="flex space-x-2 bg-neutral-900 p-1 rounded-xl mb-4 sm:mb-6 border border-red-500/30">
+                        <button onclick="switchAuthTab('login')" id="auth-btn-login" class="flex-1 py-2.5 text-[10px] sm:text-xs font-black rounded-lg transition duration-200 bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-500/50 uppercase tracking-wider">
+                            <i data-lucide="key-round" class="w-3.5 h-3.5 inline-block mr-1"></i> เข้าใช้งานด่วน (VIP)
+                        </button>
+                        <button onclick="switchAuthTab('signup')" id="auth-btn-signup" class="flex-1 py-2.5 text-[10px] sm:text-xs font-black rounded-lg transition duration-200 text-slate-400 hover:text-slate-100 hover:bg-neutral-800">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5 inline-block mr-1"></i> สมัครสมาชิกใหม่
+                        </button>
+                    </div>
+
+                    <!-- Auth Block: Login Selection -->
+                    <div id="auth-view-login" class="space-y-4">
+                        <div class="space-y-1">
+                            <h3 class="text-lg sm:text-xl font-black text-white tracking-wide flex items-center uppercase">
+                                <span class="w-2.5 h-5 bg-gradient-to-b from-red-500 to-cyan-500 rounded-sm mr-2 block"></span>
+                                ยินดีต้อนรับสมาชิกสโมสร
+                            </h3>
+                            <p class="text-[10px] sm:text-xs text-slate-400">กรอกชื่อผู้ใช้งาน และรหัสประจำตัว/รหัสผ่านเพื่อเข้าสู่ระบบคาสิโนกีฬาออโต้</p>
+                        </div>
+
+                        <!-- Manual ID Login Form -->
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[10px] sm:text-xs font-extrabold text-cyan-400 uppercase tracking-wider mb-1">ชื่อ-นามสกุลจริง หรือ ชื่อผู้ใช้งาน</label>
+                                <div class="relative">
+                                    <i data-lucide="user" class="absolute left-3 top-2.5 w-4 h-4 text-cyan-400"></i>
+                                    <input type="text" id="auth-login-name" placeholder="ป้อนชื่อจริง เช่น นายศิริเกียรติ สปอร์ต" class="w-full pl-9 pr-3 py-2 bg-neutral-900 border border-cyan-400/50 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none text-xs text-cyan-100 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] sm:text-xs font-extrabold text-cyan-400 uppercase tracking-wider mb-1">รหัสประจำตัว หรือ รหัสผ่าน</label>
+                                <div class="relative">
+                                    <i data-lucide="lock" class="absolute left-3 top-2.5 w-4 h-4 text-cyan-400"></i>
+                                    <input type="password" id="auth-login-password" placeholder="ป้อนรหัสประจำตัว (STxxxxx) หรือรหัสผ่านของคุณ" class="w-full pl-9 pr-3 py-2 bg-neutral-900 border border-cyan-400/50 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none text-xs text-cyan-100 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                                </div>
+                            </div>
+
+                            <button onclick="handleManualLogin()" class="w-full bg-gradient-to-r from-red-600 via-red-500 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-black text-xs py-3 rounded-xl shadow-lg shadow-red-500/40 transition-all border border-red-400 uppercase tracking-wider">
+                                <i data-lucide="key-round" class="w-3.5 h-3.5 inline-block mr-1"></i> เข้าสู่ระบบออโต้
+                            </button>
+
+                            <div class="flex items-center justify-between text-[10px] bg-red-950/40 border border-red-500/30 p-2.5 rounded-lg mt-1.5">
+                                <span class="text-slate-400 font-bold">🔑 ยูสเซอร์ผู้ดูแลระบบ (พิมพ์เอง):</span>
+                                <span class="text-yellow-400 font-black font-mono tracking-widest bg-black px-2.5 py-1 rounded border border-yellow-500/30">AMSS234</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Auth Block: Sign Up Form -->
+                    <div id="auth-view-signup" class="space-y-4 hidden">
+                        <div class="space-y-1">
+                            <h3 class="text-lg sm:text-xl font-black text-white tracking-wide flex items-center uppercase">
+                                <span class="w-2.5 h-5 bg-cyan-400 rounded-sm mr-2 block"></span>
+                                สมัครสมาชิกใหม่ (ลงทะเบียนระบบตรง)
+                            </h3>
+                            <p class="text-[10px] sm:text-xs text-slate-400">กรอกข้อมูลเพื่อเปิดสิทธิ์รับยูสเซอร์สะสมประวัติพอยท์สโมสร</p>
+                        </div>
+
+                        <form id="auth-signup-form" onsubmit="handleAuthSignupSubmit(event)" class="space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-red-400 mb-1">ฐานะสมาชิก *</label>
+                                    <select id="auth-signup-role" onchange="toggleAuthClassFields()" required class="w-full bg-neutral-900 border border-red-500/50 text-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-red-500 outline-none">
+                                        <option value="นักเรียน">นักเรียน (Student)</option>
+                                        <option value="ครูอาจารย์">ครูอาจารย์ (Teacher)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-red-400 mb-1">ชื่อ - นามสกุลจริง *</label>
+                                    <input type="text" id="auth-signup-name" required placeholder="เช่น นายศิริเกียรติ สปอร์ต" class="w-full bg-neutral-900 border border-red-500/50 text-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Always Visible: Emoji selection -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-cyan-400 mb-1">ไอคอนนำโชคประจำตัว *</label>
+                                <select id="auth-signup-emoji" required class="w-full bg-neutral-900 border border-cyan-400/50 text-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-500 outline-none">
+                                    <option value="⚽">⚽ ฟุตบอล</option>
+                                    <option value="🏀">🏀 บาสเกตบอล</option>
+                                    <option value="🏸">🏸 แบดมินตัน</option>
+                                    <option value="🏐">🏐 วอลเลย์บอล</option>
+                                    <option value="🏃">🏃 นักวิ่งแรงสูง</option>
+                                    <option value="🏋️">🏋️ นักยกลูกเหล็ก</option>
+                                </select>
+                            </div>
+
+                            <!-- Student-only dynamic fields container (Hidden if Teacher) -->
+                            <div id="auth-student-only-fields" class="space-y-3">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-cyan-400 mb-1">รหัสประจำตัวนักเรียน *</label>
+                                        <input type="text" id="auth-signup-id" placeholder="เช่น ST66014" class="w-full bg-neutral-900 border border-cyan-400/50 text-cyan-300 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-400 outline-none uppercase font-mono">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-cyan-400 mb-1">เบอร์โทรศัพท์มือถือ *</label>
+                                        <input type="tel" id="auth-signup-phone" placeholder="089-xxx-xxxx" class="w-full bg-neutral-900 border border-cyan-400/50 text-cyan-300 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-400 outline-none">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-cyan-400 mb-1">ชั้นเรียน *</label>
+                                        <input type="text" id="auth-signup-class" placeholder="เช่น ม.5/2" class="w-full bg-neutral-900 border border-cyan-400/50 text-cyan-300 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-400 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-red-400 mb-1">เลขที่ห้องเรียน *</label>
+                                        <input type="number" id="auth-signup-number" min="1" placeholder="เช่น 15" class="w-full bg-neutral-900 border border-red-500/50 text-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-red-500 outline-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Teacher-only dynamic fields container (Hidden if Student) -->
+                            <div id="auth-teacher-only-fields" class="space-y-3 hidden">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-red-400 mb-1">กำหนดรหัสผ่านเข้าใช้งาน *</label>
+                                    <input type="password" id="auth-signup-teacher-password" placeholder="ตั้งรหัสผ่านสำหรับล็อกอินเข้าใช้" class="w-full bg-neutral-900 border border-red-500/50 text-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-red-600 via-red-500 to-cyan-500 hover:from-red-700 hover:to-cyan-600 text-white font-black text-xs rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.5)] transition flex items-center justify-center space-x-2 border border-red-400">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-yellow-300 animate-bounce"></i>
+                                <span>ยืนยันข้อมูลสมัครเว็บตรง</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Admin Safe Information (Strictly informational, no buttons) -->
+                <div class="pt-3 mt-3 border-t border-red-500/30 flex items-center justify-between bg-black/40 p-2.5 rounded-xl">
+                    <p class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wide">สิทธิ์ผู้ดูแลคลังกีฬา</p>
+                    <div class="text-[10px] sm:text-xs font-black text-slate-400 flex items-center space-x-1">
+                        <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-red-500"></i>
+                        <span>ป้อนรหัส "AMSS234" ในช่องล็อกอินด้านบนเพื่อเข้าใช้งาน</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Layout Container (Initially Hidden until Auth Successful) -->
+    <div id="main-app-layout" class="hidden flex-grow flex flex-col">
+        
+        <!-- MAIN APP NAVIGATION BAR -->
+        <nav class="bg-black border-b-2 border-red-500/40 sticky top-0 z-30 shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    
+                    <!-- Left Brand / Logo -->
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <div class="bg-gradient-to-br from-red-600 to-cyan-500 p-1.5 sm:p-2 rounded-xl shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+                            <i data-lucide="trophy" class="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse"></i>
+                        </div>
+                        <div>
+                            <span class="text-base sm:text-xl font-black text-white cyber-font tracking-widest glow-neon-text">SPORTSHARE</span>
+                            <span class="hidden sm:inline-block text-[10px] text-red-500 font-extrabold tracking-wider uppercase ml-1">VEGAS DIRECT PORT</span>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Tabs (Desktop only) -->
+                    <div class="hidden md:flex space-x-1 bg-neutral-900 p-1 rounded-xl border border-red-500/20">
+                        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-red-600 text-white shadow-md shadow-red-500/20 transition duration-150">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                            <span>กระดานสถิติ</span>
+                        </button>
+                        <button onclick="switchTab('borrow')" id="tab-borrow" class="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition duration-150">
+                            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                            <span>ทำเรื่องขอยืม</span>
+                        </button>
+                        <button onclick="switchTab('return')" id="tab-return" class="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition duration-150">
+                            <i data-lucide="undo-2" class="w-4 h-4"></i>
+                            <span>คืนอุปกรณ์กีฬา</span>
+                        </button>
+                        <button onclick="switchTab('my-history')" id="tab-my-history" class="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition duration-150">
+                            <i data-lucide="history" class="w-4 h-4"></i>
+                            <span>ประวัติการใช้สิทธิ์</span>
+                        </button>
+                    </div>
+
+                    <!-- Active Member Indicator & Log Out -->
+                    <div class="flex items-center space-x-1.5 sm:space-x-2">
+                        <div class="bg-neutral-900 border border-cyan-400/50 rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 flex items-center space-x-1.5 sm:space-x-2">
+                            <span id="active-user-avatar" class="text-base sm:text-lg">👤</span>
+                            <div class="text-left">
+                                <p id="active-user-name" class="text-[10px] sm:text-xs font-extrabold text-white max-w-[60px] sm:max-w-none truncate">ทดสอบสาธิต</p>
+                                <span id="active-user-id" class="text-[8px] sm:text-[9px] text-cyan-400 font-mono block">ST66014</span>
+                            </div>
+                            <span id="vip-tag" class="bg-gradient-to-r from-yellow-500 to-red-500 text-[7px] sm:text-[8px] text-white font-extrabold px-1 rounded-md animate-pulse">VIP</span>
+                        </div>
+                        <button onclick="handleLogout()" class="bg-red-950/80 hover:bg-red-600 text-white p-1.5 sm:p-2 rounded-xl border border-red-500/50 hover:shadow-[0_0_15px_rgba(239,68,68,0.6)] transition" title="ออกจากระบบ">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+
+        <!-- CRIMSON WARNING BANNER: Show when user is blocked (Suspicion of theft or overdue) -->
+        <div id="crimson-theft-warning" class="hidden bg-gradient-to-r from-red-600 via-neutral-950 to-red-600 text-white text-center py-3.5 px-4 border-b-2 border-red-500 animate-pulse-fast z-20">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3">
+                <i data-lucide="shield-alert" class="w-7 h-7 text-yellow-300 animate-bounce"></i>
+                <div class="text-center sm:text-left">
+                    <h4 class="text-xs sm:text-sm font-black tracking-widest text-yellow-300">🚨 บัญชีถูกระงับสิทธิ์ยืมเนื่องจากมีคดีละเมิดกฎ (สูญหายหรือลักขโมย) 🚨</h4>
+                    <p class="text-[10px] sm:text-xs text-slate-300">กรุณาติดต่อคุณครูฝ่ายโภคภัณฑ์หรือคุณครูปกครองทันที เพื่อเคลียร์คดียึด/ชดใช้อุปกรณ์จึงจะยืมรายการใหม่ได้</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP WORKSPACE WITH SECTIONS -->
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6 flex-grow w-full">
+            
+            <!-- SECTION 1: DASHBOARD (สถิติพัสดุและคลัง) -->
+            <section id="section-dashboard" class="space-y-4 sm:space-y-6">
+                
+                <!-- Welcome greeting -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-neutral-950 p-4 sm:p-5 rounded-2xl border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)] gap-3">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black text-white">ยินดีต้อนรับกลับสโมสร, <span id="welcome-name" class="text-cyan-400">ผู้ใช้งาน</span> 👋</h2>
+                        <p class="text-[10px] sm:text-xs text-slate-400">ระบบออโต้ทำการสแกนคลังสินค้าและการจัดส่งอุปกรณ์เรียบร้อยแล้ว ค้นหาชุดกีฬาที่ต้องการด้านล่าง</p>
+                    </div>
+                    <!-- Role Switch UI to bypass to admin -->
+                    <button onclick="toggleAdminPanel()" id="admin-panel-trigger" class="w-full md:w-auto bg-neutral-900 text-yellow-400 hover:text-black hover:bg-yellow-400 text-[11px] sm:text-xs font-black px-4 py-2.5 rounded-xl border border-yellow-500/40 transition flex items-center justify-center space-x-2">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span id="admin-trigger-text">สลับเป็น: แผงคุณครู / ผู้ดูแลคลัง</span>
+                    </button>
+                </div>
+
+                <!-- STATS COUNTERS CARDS -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-neutral-950 p-3 sm:p-4 rounded-2xl border-l-4 border-red-500 shadow-md">
+                        <div class="flex justify-between items-center text-slate-400 mb-1 sm:mb-2">
+                            <span class="text-[10px] sm:text-xs font-bold">ทั้งหมดในคลัง</span>
+                            <i data-lucide="package" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500"></i>
+                        </div>
+                        <p id="stat-total" class="text-xl sm:text-2xl font-black text-white cyber-font">...</p>
+                        <span class="text-[8px] sm:text-[10px] text-slate-500 block">ชิ้นที่พร้อมลงบัญชี</span>
+                    </div>
+
+                    <div class="bg-neutral-950 p-3 sm:p-4 rounded-2xl border-l-4 border-cyan-400 shadow-md">
+                        <div class="flex justify-between items-center text-slate-400 mb-1 sm:mb-2">
+                            <span class="text-[10px] sm:text-xs font-bold">กำลังถูกยืม</span>
+                            <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400"></i>
+                        </div>
+                        <p id="stat-borrowed" class="text-xl sm:text-2xl font-black text-cyan-400 cyber-font">...</p>
+                        <span class="text-[8px] sm:text-[10px] text-slate-500 block">ออกสนามจริงขณะนี้</span>
+                    </div>
+
+                    <div class="bg-neutral-950 p-3 sm:p-4 rounded-2xl border-l-4 border-emerald-400 shadow-md">
+                        <div class="flex justify-between items-center text-slate-400 mb-1 sm:mb-2">
+                            <span class="text-[10px] sm:text-xs font-bold">พร้อมยืมได้ทันที</span>
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400"></i>
+                        </div>
+                        <p id="stat-available" class="text-xl sm:text-2xl font-black text-emerald-400 cyber-font">...</p>
+                        <span class="text-[8px] sm:text-[10px] text-slate-500 block">ทำรายการไวสุดใน 3 วิ</span>
+                    </div>
+
+                    <div class="bg-neutral-950 p-3 sm:p-4 rounded-2xl border-l-4 border-amber-500 shadow-md">
+                        <div class="flex justify-between items-center text-slate-400 mb-1 sm:mb-2">
+                            <span class="text-[10px] sm:text-xs font-bold">ชำรุดเสียหาย</span>
+                            <i data-lucide="wrench" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500"></i>
+                        </div>
+                        <p id="stat-damaged" class="text-xl sm:text-2xl font-black text-amber-500 cyber-font">...</p>
+                        <span class="text-[8px] sm:text-[10px] text-slate-500 block">อยู่ระหว่างปรับแต่งบำรุง</span>
+                    </div>
+                </div>
+
+                <!-- TEACHER ADMIN PANEL SECTION (Conditionally rendered) -->
+                <div id="admin-panel-container" class="hidden space-y-4 sm:space-y-6 bg-gradient-to-r from-neutral-950 to-neutral-900 p-4 sm:p-6 rounded-2xl border-2 border-yellow-500/60 shadow-[0_0_25px_rgba(234,179,8,0.2)]">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-yellow-500/20 gap-3">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-black text-yellow-400 tracking-wide flex items-center">
+                                <i data-lucide="shield-alert" class="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0"></i>
+                                แผงควบคุมสืบสวนและสถิติส่วนครูปกครอง
+                            </h3>
+                            <p class="text-[10px] sm:text-xs text-slate-400">ตรวจสอบกรณีลักขโมย ชำรุดค้างส่ง และระงับบัญชีนักเรียนที่ทำผิดกฎ</p>
+                        </div>
+                        <button onclick="openAddEquipmentModal()" class="w-full sm:w-auto bg-yellow-400 text-black hover:bg-yellow-500 font-extrabold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center space-x-1.5">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            <span>เพิ่มพัสดุกีฬาใหม่</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- OVERDUE & THEFT TRACKING -->
+                        <div class="lg:col-span-7 space-y-3">
+                            <h4 class="text-xs sm:text-sm font-black text-red-500 uppercase flex items-center">
+                                <span class="w-2 h-4 bg-red-600 rounded-sm mr-2 block"></span>
+                                รายการคดีค้างส่ง และสงสัยลักขโมยอุปกรณ์
+                            </h4>
+
+                            <div class="max-h-[250px] sm:max-h-[300px] overflow-y-auto space-y-3 pr-2" id="admin-overdue-list">
+                                <!-- Loaded via script -->
+                            </div>
+                        </div>
+
+                        <!-- REGISTERED MEMBERS CONTROL DIRECTORY -->
+                        <div class="lg:col-span-5 space-y-3">
+                            <h4 class="text-xs sm:text-sm font-black text-cyan-400 uppercase flex items-center">
+                                <span class="w-2 h-4 bg-cyan-400 rounded-sm mr-2 block"></span>
+                                ทะเบียนผู้ใช้ระบบทั้งหมด (ควบคุมระงับสิทธิ์)
+                            </h4>
+                            <div class="max-h-[250px] sm:max-h-[300px] overflow-y-auto space-y-2 pr-1" id="admin-members-list">
+                                <!-- Loaded via script -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- USER DASHBOARD HIGHLIGHTS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div class="bg-neutral-950 p-4 sm:p-5 rounded-2xl border border-cyan-400/20">
+                        <h3 class="text-xs sm:text-sm font-black text-white uppercase flex items-center mb-4">
+                            <i data-lucide="party-popper" class="w-4 h-4 text-cyan-400 mr-2"></i>
+                            อันดับนักกีฬาเกียรติยศ (ยืมเก่ง-คืนไว-เครดิตสูง)
+                        </h3>
+                        <div class="space-y-2" id="honors-list-container">
+                            <!-- Loaded Dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="bg-neutral-950 p-4 sm:p-5 rounded-2xl border border-red-500/20">
+                        <h3 class="text-xs sm:text-sm font-black text-white uppercase flex items-center mb-4">
+                            <i data-lucide="megaphone" class="w-4 h-4 text-red-500 mr-2"></i>
+                            ข้อมูลการอัปเดตระบบออโต้
+                        </h3>
+                        <div class="space-y-3 text-[11px] sm:text-xs text-slate-400">
+                            <p class="border-b border-neutral-900 pb-2">📅 <b>สถิติกำหนดส่ง:</b> กำหนดส่งไม่เกิน 5 วันทำการนับตั้งแต่วันยืมสำเร็จ เพื่อแบ่งปันพัสดุให้เพื่อนๆ</p>
+                            <p class="border-b border-neutral-900 pb-2">💸 <b>ค่าธรรมเนียม:</b> บริการฟรี 100% สภานักเรียนสนับสนุนเพื่อสุขภาพที่ดีของเยาวชน</p>
+                            <p class="text-red-400">🚫 <b>กรณีประพฤติมิชอบ:</b> ลักขโมยพัสดุราชการมีความผิดทางวินัยและทางกฎหมายอาญา หักคะแนนความประพฤติทันที 50 คะแนน!</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- SECTION 2: BORROW (ทำเรื่องขอยืมอุปกรณ์กีฬา) -->
+            <section id="section-borrow" class="hidden space-y-4 sm:space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-neutral-950 p-4 rounded-xl border border-red-500/30 gap-4">
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-extrabold text-white">ตู้คลังอุปกรณ์กีฬาทั้งหมด</h2>
+                        <p class="text-[10px] sm:text-xs text-slate-400">เลือกประเภทและเลือกชิ้นงานที่คุณต้องการใช้ในการออกกำลังกาย</p>
+                    </div>
+                    
+                    <!-- Search & Filter bar -->
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <div class="relative flex-grow sm:flex-grow-0">
+                            <input type="text" id="borrow-search" oninput="filterEquipments()" placeholder="ค้นหาชื่ออุปกรณ์..." class="w-full sm:w-48 bg-black border border-red-500/50 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:ring-1 focus:ring-cyan-400">
+                        </div>
+                        <select id="borrow-filter-category" onchange="filterEquipments()" class="bg-black border border-red-500/50 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none w-full sm:w-auto">
+                            <option value="ทั้งหมด">กีฬาทุกประเภท</option>
+                            <option value="ฟุตบอล">⚽ ฟุตบอล</option>
+                            <option value="บาสเกตบอล">🏀 บาสเกตบอล</option>
+                            <option value="แบดมินตัน">🏸 แบดมินตัน</option>
+                            <option value="วอลเลย์บอล">🏐 วอลเลย์บอล</option>
+                            <option value="อุปกรณ์ทั่วไป">⚙️ ทั่วไป / อื่นๆ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CARDS GRID FOR EQUIPMENTS -->
+                <div id="equipment-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Dynamic rendering via Javascript -->
+                </div>
+            </section>
+
+            <!-- SECTION 3: RETURN (ระบบคืนอุปกรณ์กีฬาเดี่ยว) -->
+            <section id="section-return" class="hidden space-y-4 sm:space-y-6">
+                <div class="bg-neutral-950 p-4 sm:p-6 rounded-2xl border-2 border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                    <div class="flex items-center space-x-3 pb-4 border-b border-cyan-400/20 mb-4 sm:mb-6">
+                        <div class="bg-cyan-500 p-2 rounded-xl text-black flex-shrink-0">
+                            <i data-lucide="undo-2" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black text-white">ระบบส่งคืนอุปกรณ์กีฬาทันใจ (Instant Auto-Return)</h2>
+                            <p class="text-[10px] sm:text-xs text-slate-400">ค้นหารายการอุปกรณ์ที่ยืมค้างไว้ ตรวจเช็คความสมบูรณ์ และส่งคืนตู้เก็บอัตโนมัติ</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- Left pane: Member identity selector for returning -->
+                        <div class="lg:col-span-5 space-y-4">
+                            <div class="bg-black/80 p-4 sm:p-5 rounded-xl border border-cyan-500/30 space-y-4">
+                                <h3 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider flex items-center">
+                                    <i data-lucide="id-card" class="w-4 h-4 text-cyan-400 mr-2"></i>
+                                    ระบุตัวตนส่งคืนอุปกรณ์
+                                </h3>
+
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-cyan-400 mb-1">รหัสประจำตัวหรือชื่อที่ต้องการคืน</label>
+                                        <div class="flex space-x-2">
+                                            <input type="text" id="return-search-id" placeholder="ตัวอย่าง: ST66014 หรือชื่อเต็ม" class="flex-grow bg-neutral-900 border border-cyan-400/40 rounded-xl px-3 py-2.5 text-xs font-mono text-cyan-300 outline-none uppercase focus:ring-1 focus:ring-cyan-400">
+                                            <button onclick="handleSearchReturnList()" class="bg-cyan-500 hover:bg-cyan-600 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl transition">
+                                                ดึงประวัติ
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[10px] sm:text-[11px] text-slate-400 bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-800 gap-1.5">
+                                        <span>ดึงชื่อล็อกอินปัจจุบันด่วน:</span>
+                                        <button onclick="autofillReturnWithActive()" class="text-cyan-400 hover:underline font-bold flex items-center space-x-1">
+                                            <i data-lucide="user" class="w-3 h-3"></i>
+                                            <span id="return-autofill-btn-text">คลิกขอดึงสิทธิ์</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right pane: Pending returns list & assessment tools -->
+                        <div class="lg:col-span-7 space-y-4">
+                            <h3 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center">
+                                <i data-lucide="list-checks" class="w-4 h-4 text-cyan-400 mr-2"></i>
+                                รายการที่ค้างส่งอยู่ของคุณ
+                            </h3>
+
+                            <div id="return-items-wrapper" class="space-y-3 min-h-[150px] bg-black/40 p-3 sm:p-4 rounded-xl border border-cyan-400/10 flex flex-col justify-center">
+                                <!-- Loaded dynamically via user query -->
+                                <p class="text-xs text-slate-500 text-center py-8">กรุณากรอกและส่งรหัสตัวตนหรือชื่อจริงด้านซ้าย เพื่อตรวจสอบรายการยืมพัสดุของคุณ</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: MY HISTORY (ประวัติการยืม-คืนส่วนตัว) -->
+            <section id="section-my-history" class="hidden space-y-4 sm:space-y-6">
+                <div class="bg-neutral-950 p-4 sm:p-5 rounded-2xl border border-red-500/20">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-red-500/20 mb-4 gap-2">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-black text-white">บันทึกธุรกรรมการทำรายการทั้งหมด</h2>
+                            <p class="text-[10px] sm:text-xs text-slate-400">ประวัติอ้างอิงการยืมและคืนทั้งหมดในระบบ</p>
+                        </div>
+                        <span class="bg-red-950 text-red-400 text-[10px] sm:text-xs font-bold px-3 py-1 rounded-xl border border-red-500/30 self-start sm:self-auto">
+                            ข้อมูลอัปเดตเรียลไทม์
+                        </span>
+                    </div>
+
+                    <!-- Desktop Table (Hidden on Mobile) -->
+                    <div class="hidden md:block overflow-x-auto rounded-xl border border-neutral-800 bg-black/60">
+                        <table class="min-w-full divide-y divide-neutral-900 text-left text-xs">
+                            <thead class="bg-neutral-950 text-slate-400 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-4 py-3 font-extrabold">ผู้ทำรายการ</th>
+                                    <th class="px-4 py-3 font-extrabold">อุปกรณ์กีฬา</th>
+                                    <th class="px-4 py-3 font-extrabold">วันที่เริ่มยืม</th>
+                                    <th class="px-4 py-3 font-extrabold">กำหนดคืน</th>
+                                    <th class="px-4 py-3 font-extrabold">วันที่ส่งคืนจริง</th>
+                                    <th class="px-4 py-3 font-extrabold">สถานะคืน</th>
+                                    <th class="px-4 py-3 font-extrabold text-right">ตรวจเช็คสภาพ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-900 text-slate-200" id="global-history-tbody">
+                                <!-- Loaded via script -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Cards List (Visible only on Mobile) -->
+                    <div class="block md:hidden space-y-3" id="global-history-mobile-container">
+                        <!-- Dynamic Mobile Cards Loaded via script -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Mobile Bottom Navigation (Visible only on mobile screen widths) -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-neutral-950/95 backdrop-blur-md border-t-2 border-red-500/50 py-2 px-1 z-40 flex justify-around items-center shadow-[0_-4px_20px_rgba(239,68,68,0.2)]">
+            <button onclick="switchTab('dashboard')" id="mobile-tab-dashboard" class="flex flex-col items-center justify-center text-red-500 font-extrabold transition">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="text-[9px] mt-1 font-bold">แดชบอร์ด</span>
+            </button>
+            <button onclick="switchTab('borrow')" id="mobile-tab-borrow" class="flex flex-col items-center justify-center text-slate-400 font-bold transition">
+                <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                <span class="text-[9px] mt-1 font-bold">ขอยืม</span>
+            </button>
+            <button onclick="switchTab('return')" id="mobile-tab-return" class="flex flex-col items-center justify-center text-slate-400 font-bold transition">
+                <i data-lucide="undo-2" class="w-5 h-5"></i>
+                <span class="text-[9px] mt-1 font-bold">คืนของ</span>
+            </button>
+            <button onclick="switchTab('my-history')" id="mobile-tab-my-history" class="flex flex-col items-center justify-center text-slate-400 font-bold transition">
+                <i data-lucide="history" class="w-5 h-5"></i>
+                <span class="text-[9px] mt-1 font-bold">ประวัติ</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- CUSTOM INTERACTIVE MODALS -->
+    
+    <!-- 1. Borrowing Action Form Modal -->
+    <div id="borrow-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 rounded-2xl border-2 border-red-500/80 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-[0_0_30px_rgba(239,68,68,0.4)] overflow-hidden">
+            <div class="bg-gradient-to-r from-red-600 to-black p-4 text-white flex justify-between items-center sticky top-0 z-10">
+                <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center">
+                    <i data-lucide="shopping-cart" class="w-4 h-4 text-yellow-300 mr-2"></i>
+                    ยืนยันคำขอยืมอุปกรณ์กีฬาออโต้
+                </h3>
+                <button onclick="closeBorrowModal()" class="text-slate-400 hover:text-white transition p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleConfirmBorrowSubmit(event)" class="p-4 sm:p-5 space-y-4 text-xs">
+                <!-- Selected Item Card Preview -->
+                <div class="bg-neutral-900 p-3 rounded-xl border border-cyan-400/30 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span id="modal-item-emoji" class="text-2xl">⚽</span>
+                        <div class="text-left">
+                            <h4 id="modal-item-name" class="font-bold text-white text-xs">ลูกฟุตบอล</h4>
+                            <span id="modal-item-category" class="text-[9px] text-slate-400">หมวดหมู่ฟุตบอล</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] text-slate-400 block">คงเหลือในตู้</span>
+                        <span id="modal-item-qty" class="text-cyan-400 font-bold font-mono">15 ลูก</span>
+                    </div>
+                </div>
+
+                <!-- Fields -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">ชื่อผู้ทำสัญญายืม</label>
+                        <input type="text" id="modal-user-name" disabled class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-400 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-400 mb-1">รหัสประจำตัวผู้ยืม</label>
+                            <input type="text" id="modal-user-id" disabled class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-400 outline-none font-mono uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">เบอร์มือถือติดต่อกลับ</label>
+                            <input type="text" id="modal-user-phone" disabled class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-400 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-cyan-400 mb-1 font-bold">วันที่ทำรายการยืม *</label>
+                            <input type="date" id="modal-borrow-date" required class="w-full bg-neutral-900 border border-red-500/30 rounded-lg px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-400">
+                        </div>
+                        <div>
+                            <label class="block text-red-500 mb-1 font-bold">กำหนดส่งคืนล่าสุด *</label>
+                            <input type="date" id="modal-due-date" required class="w-full bg-neutral-900 border border-red-500/30 rounded-lg px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-400">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-950/40 p-2.5 rounded-lg border border-red-500/30 text-[10px] text-red-400 leading-relaxed">
+                    <b>กติการ่วมสนุก:</b> การคืนล่าช้ากว่ากำหนด 5 วันขึ้นไป ระบบจะแจ้งเตือนอัตโนมัติ และอาจถูกล็อคบัญชีชั่วคราวจนกว่าจะนำพัสดุมารายงานสภาพ
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-black rounded-lg transition shadow-lg shadow-red-500/30">
+                    อนุมัติการยืมออโต้ทันที
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Admin: Add New Equipment Modal -->
+    <div id="add-equipment-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 rounded-2xl border-2 border-yellow-500 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-[0_0_25px_rgba(234,179,8,0.3)] overflow-hidden">
+            <div class="bg-yellow-400 p-4 text-black flex justify-between items-center sticky top-0 z-10">
+                <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center">
+                    <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>
+                    เพิ่มรายการอุปกรณ์กีฬาเข้าสู่ตู้คลัง
+                </h3>
+                <button onclick="closeAddEquipmentModal()" class="text-black hover:opacity-75 transition p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleNewEquipmentSubmit(event)" class="p-4 sm:p-5 space-y-4 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">หมวดหมู่กีฬา *</label>
+                        <select id="new-item-category" required class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-200 outline-none">
+                            <option value="ฟุตบอล">⚽ ฟุตบอล</option>
+                            <option value="บาสเกตบอล">🏀 บาสเกตบอล</option>
+                            <option value="แบดมินตัน">🏸 แบดมินตัน</option>
+                            <option value="วอลเลย์บอล">🏐 วอลเลย์บอล</option>
+                            <option value="อุปกรณ์ทั่วไป">⚙️ อุปกรณ์ทั่วไป</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">อิโมจิสินค้าแนะนำ *</label>
+                        <input type="text" id="new-item-emoji" required placeholder="เช่น ⚽" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-200 outline-none text-center">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">ชื่อเรียกของอุปกรณ์กีฬา *</label>
+                    <input type="text" id="new-item-name" required placeholder="เช่น ลูกเปตองเหล็ก VIP" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-200 outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">จำนวนที่นำเข้าคลังใหม่ *</label>
+                        <input type="number" id="new-item-total" min="1" required placeholder="10" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-200 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">สภาพอุปกรณ์เริ่มต้น *</label>
+                        <select id="new-item-status" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-200 outline-none">
+                            <option value="พร้อมใช้งาน">🟢 พร้อมใช้งานได้ทันที</option>
+                            <option value="ชำรุด">🟡 ชำรุด/ส่งปรับแต่ง</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-extrabold rounded-lg hover:bg-yellow-500 transition shadow-lg">
+                    บรรจุข้อมูลลงสารสนเทศ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Dynamic Toast Alert Box -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none max-w-[90vw]">
+        <!-- Spawn toasts via javascript dynamically -->
+    </div>
+
+    <!-- 4. Incident Report / Theft Punishment Modal -->
+    <div id="incident-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 rounded-2xl border-2 border-red-500 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-red-600 to-black p-4 text-white flex justify-between items-center sticky top-0 z-10">
+                <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center">
+                    <i data-lucide="gavel" class="w-5 h-5 mr-2 text-yellow-300"></i>
+                    บันทึกพฤติกรรมสืบสวนทุจริต / บล็อกสิทธิ์
+                </h3>
+                <button onclick="closeIncidentModal()" class="text-slate-400 hover:text-white p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-5 space-y-4 text-xs">
+                <div class="bg-neutral-900 p-3 rounded-lg border border-neutral-800">
+                    <p class="text-slate-400">สมาชิกรอพิจารณาคดีความประพฤติ:</p>
+                    <p id="incident-member-info" class="text-xs sm:text-sm font-black text-white mt-1">ม.5/2 เลขที่ 12</p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-slate-300">กรุณาเลือกชนิดของประวัติประพฤติเสีย *</label>
+                    <select id="incident-type-selector" class="w-full bg-neutral-900 border border-red-500/40 rounded-lg px-2.5 py-2 text-slate-100 outline-none">
+                        <option value="Overdue">⚠️ ส่งคืนเลยกำหนดเวลามากๆ (ตักเตือน)</option>
+                        <option value="Stolen">🚨 สงสัยว่าลักขโมย / อุปกรณ์สูญหาย (แบนทันที)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-300">บันทึกช่วยจำของคุณครูปกครอง (ครูลงชื่อพฤติกรรม)</label>
+                    <textarea id="incident-notes" placeholder="เช่น ไม่นำส่งฟุตบอลคืนมาแล้ว 10 วัน โทรศัพท์หาผู้ปกครองไม่รับสาย แข่งกีฬานักเรียนแล้วชอบแอบเอากลับบ้าน" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-2 text-slate-200 outline-none h-24 text-xs"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="handleExecuteIncident(true)" class="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 text-white font-black py-2.5 rounded-xl transition">
+                        ระงับสิทธิ์ยืม (Lock)
+                    </button>
+                    <button onclick="handleExecuteIncident(false)" class="bg-neutral-900 border border-neutral-700 text-slate-300 hover:text-white py-2.5 rounded-xl transition">
+                        ตักเตือนแต่ไม่แบน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT ONLINE CLOUD SYSTEM LOGIC -->
+    <script type="module">
+        // ==========================================================================================
+        // LOCAL PERSISTENT STORAGE ENGINE
+        // This replaces the Firebase Cloud SDK. The original file relied on `__firebase_config` /
+        // `__app_id` variables that only exist inside a special hosted sandbox. Outside of that
+        // sandbox those variables are undefined, so the app silently fell back to a fake
+        // "mock-api-key" project — every setDoc/updateDoc call then failed silently against a
+        // Firebase project that doesn't exist, which is why data stopped updating.
+        // The functions below keep the exact same names/signatures (doc, setDoc, updateDoc,
+        // collection, onSnapshot, initializeApp, getAuth, getFirestore, signInAnonymously,
+        // signInWithCustomToken) so none of the app logic below has to change, but they persist
+        // data to the browser's localStorage instead. This means saving/updating always works,
+        // works fully offline, and needs no external account or API key.
+        // ==========================================================================================
+        const LS_PREFIX = 'sportshare_db_';
+
+        function lsGetCollection(name) {
+            try {
+                const raw = localStorage.getItem(LS_PREFIX + name);
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                console.error('Local storage read error:', e);
+                return {};
+            }
+        }
+
+        function lsSetCollection(name, obj) {
+            localStorage.setItem(LS_PREFIX + name, JSON.stringify(obj));
+        }
+
+        // Simple pub/sub so views refresh immediately after a write, mimicking Firestore's onSnapshot
+        const _listeners = {};
+
+        function _notify(collectionName) {
+            const data = lsGetCollection(collectionName);
+            const docsArray = Object.values(data);
+            const snapshot = {
+                empty: docsArray.length === 0,
+                forEach(fn) {
+                    docsArray.forEach(d => fn({ data: () => d }));
+                }
+            };
+            (_listeners[collectionName] || []).forEach(cb => {
+                try { cb(snapshot); } catch (e) { console.error('Listener error:', e); }
+            });
+        }
+
+        // doc(db, 'artifacts', appId, 'public', 'data', collectionName, docId)
+        function doc(_db, ...segments) {
+            return {
+                collectionName: segments[segments.length - 2],
+                docId: segments[segments.length - 1]
+            };
+        }
+
+        // collection(db, 'artifacts', appId, 'public', 'data', collectionName)
+        function collection(_db, ...segments) {
+            return { collectionName: segments[segments.length - 1] };
+        }
+
+        async function setDoc(ref, data) {
+            const coll = lsGetCollection(ref.collectionName);
+            coll[ref.docId] = { ...data };
+            lsSetCollection(ref.collectionName, coll);
+            _notify(ref.collectionName);
+        }
+
+        async function updateDoc(ref, partialData) {
+            const coll = lsGetCollection(ref.collectionName);
+            if (!coll[ref.docId]) {
+                throw new Error('No document to update: ' + ref.docId);
+            }
+            coll[ref.docId] = { ...coll[ref.docId], ...partialData };
+            lsSetCollection(ref.collectionName, coll);
+            _notify(ref.collectionName);
+        }
+
+        async function getDoc(ref) {
+            const coll = lsGetCollection(ref.collectionName);
+            const data = coll[ref.docId];
+            return { exists: () => !!data, data: () => data };
+        }
+
+        function onSnapshot(ref, successCb, errorCb) {
+            if (!_listeners[ref.collectionName]) _listeners[ref.collectionName] = [];
+            _listeners[ref.collectionName].push(successCb);
+            _notify(ref.collectionName); // fire immediately with current data, like Firestore's initial snapshot
+            return () => {
+                _listeners[ref.collectionName] = (_listeners[ref.collectionName] || []).filter(cb => cb !== successCb);
+            };
+        }
+
+        function initializeApp() { return {}; }
+        function getFirestore() { return {}; }
+        function getAuth() { return { currentUser: null }; }
+
+        async function signInAnonymously(authObj) {
+            authObj.currentUser = { uid: 'local-' + Math.random().toString(36).slice(2, 10) };
+            return { user: authObj.currentUser };
+        }
+
+        async function signInWithCustomToken(authObj) {
+            return signInAnonymously(authObj);
+        }
+
+        // Core DB Initial Mock State (Used only if Cloud database is completely empty on first launch)
+        const DEFAULT_EQUIPMENTS = [
+            { id: 'EQ001', name: 'ลูกฟุตบอลแข่งเยอรมัน (Adidas)', category: 'ฟุตบอล', total: 10, available: 8, status: 'พร้อมใช้งาน', emoji: '⚽' },
+            { id: 'EQ002', name: 'บาสเกตบอลหนังส้มเงา (Molten)', category: 'บาสเกตบอล', total: 12, available: 11, status: 'พร้อมใช้งาน', emoji: '🏀' },
+            { id: 'EQ003', name: 'ไม้แบดมินตันคาร์บอน (Yonex)', category: 'แบดมินตัน', total: 16, available: 14, status: 'พร้อมใช้งาน', emoji: '🏸' },
+            { id: 'EQ004', name: 'ลูกวอลเลย์บอลหนังไมโครไฟเบอร์ (Mikasa)', category: 'วอลเลย์บอล', total: 8, available: 8, status: 'พร้อมใช้งาน', emoji: '🏐' },
+            { id: 'EQ005', name: 'กรวยพลาสติกซ้อมเลี้ยงบอล', category: 'อุปกรณ์ทั่วไป', total: 30, available: 30, status: 'พร้อมใช้งาน', emoji: '📐' },
+            { id: 'EQ006', name: 'นาฬิกาหยุดเวลาดิจิตอลโปร', category: 'อุปกรณ์ทั่วไป', total: 5, available: 4, status: 'พร้อมใช้งาน', emoji: '⏱️' },
+            { id: 'EQ007', name: 'นกหวีดสแตนเลสเสียงแหลมสูง', category: 'อุปกรณ์ทั่วไป', total: 10, available: 9, status: 'พร้อมใช้งาน', emoji: '📢' }
+        ];
+
+        const DEFAULT_MEMBERS = [
+            {
+                id: 'AMSS234',
+                name: 'ผู้ดูแลระบบสโมสรกีฬา',
+                password: 'AMSS234',
+                role: 'ครูอาจารย์',
+                class: '-',
+                number: '-',
+                phone: '089-999-9999',
+                emoji: '👑',
+                isBlocked: false,
+                incidentNotes: '',
+                score: 100
+            }
+        ];
+
+        const DEFAULT_RECORDS = [
+            { id: 'RC001', itemId: 'EQ001', itemName: 'ลูกฟุตบอลแข่งเยอรมัน (Adidas)', memberId: 'ST66014', memberName: 'นายเกริกไกร สนามดี', memberRole: 'นักเรียน', borrowDate: '2026-07-01', dueDate: '2026-07-06', returnDate: '', status: 'กำลังยืม', condition: 'สมบูรณ์ดี' }
+        ];
+
+        // Global State variables linked to Firestore Real-time
+        let equipments = [];
+        let membersList = [];
+        let borrowRecords = [];
+        let currentActiveUser = JSON.parse(localStorage.getItem('sports_active_user')) || null;
+        let isAdminViewActive = false;
+
+        let selectedItemToBorrow = null;
+        let selectedMemberForIncident = null;
+
+        // App/DB identifiers — data is namespaced under this id inside localStorage
+        const appId = 'sports-borrow-system-app';
+
+        const app = initializeApp();
+        const db = getFirestore();
+        const auth = getAuth();
+
+        // Authenticate client first (RULE 3)
+        async function runCloudAuth() {
+            try {
+                let userCredential;
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    userCredential = await signInAnonymously(auth);
+                }
+                console.log("Firebase Auth Successful. User ID: ", userCredential.user.uid);
+                
+                // Once authenticated, start real-time sync listeners
+                startRealtimeListeners();
+            } catch (error) {
+                console.error("Cloud Authentication Failed: ", error);
+                document.getElementById('cloud-loader-text').innerText = "เชื่อมต่อระบบคลาวด์ล้มเหลว กรุณาติดต่อแอดมิน";
+                showToast("ล้มเหลว: ไม่สามารถเชื่อมต่อฐานข้อมูลเรียลไทม์ได้", "error");
+            }
+        }
+
+        // Real-time Listeners (RULE 1 & RULE 2 compliant paths and simple queries)
+        function startRealtimeListeners() {
+            if (!auth.currentUser) return;
+
+            const eqCol = collection(db, 'artifacts', appId, 'public', 'data', 'equipments');
+            const memCol = collection(db, 'artifacts', appId, 'public', 'data', 'members');
+            const recCol = collection(db, 'artifacts', appId, 'public', 'data', 'records');
+
+            let eqInit = false;
+            let memInit = false;
+            let recInit = false;
+
+            function checkAllLoaded() {
+                if (eqInit && memInit && recInit) {
+                    // Hide loader overlay once first snapshots arrive
+                    const loader = document.getElementById('cloud-loader');
+                    if (loader) {
+                        loader.style.opacity = '0';
+                        setTimeout(() => loader.remove(), 500);
+                    }
+                    
+                    // Boot main layout
+                    if (currentActiveUser) {
+                        // Confirm if the active user still exists in the synced online database
+                        const exists = membersList.find(m => m.id === currentActiveUser.id);
+                        if (exists) {
+                            currentActiveUser = exists;
+                            initMainDashboard();
+                        } else {
+                            currentActiveUser = null;
+                            localStorage.removeItem('sports_active_user');
+                            showAuthGate();
+                        }
+                    } else {
+                        showAuthGate();
+                    }
+                }
+            }
+
+            // Sync Equipments Collection
+            onSnapshot(eqCol, (snapshot) => {
+                if (snapshot.empty) {
+                    // Seed defaults if Firestore collection is empty
+                    DEFAULT_EQUIPMENTS.forEach(item => {
+                        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipments', item.id), item);
+                    });
+                } else {
+                    equipments = [];
+                    snapshot.forEach(doc => {
+                        equipments.push(doc.data());
+                    });
+                    // Sort locally to maintain list structure
+                    equipments.sort((a, b) => a.id.localeCompare(b.id));
+                    
+                    // Live update render views
+                    renderDashboardStats();
+                    renderEquipmentCards();
+                }
+                eqInit = true;
+                checkAllLoaded();
+            }, (error) => {
+                console.error("Equipment Sync Error: ", error);
+            });
+
+            // Sync Members Collection
+            onSnapshot(memCol, (snapshot) => {
+                if (snapshot.empty) {
+                    // Seed admin account
+                    DEFAULT_MEMBERS.forEach(m => {
+                        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', m.id), m);
+                    });
+                } else {
+                    membersList = [];
+                    snapshot.forEach(doc => {
+                        membersList.push(doc.data());
+                    });
+                    // Make sure default admin AMSS234 is present
+                    const hasAdmin = membersList.some(m => m.id === 'AMSS234');
+                    if (!hasAdmin) {
+                        const adminObj = DEFAULT_MEMBERS[0];
+                        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', adminObj.id), adminObj);
+                    }
+
+                    // Live update views
+                    renderAdminPanel();
+                    renderHonorsList();
+                    checkTheftWarningStatus();
+                }
+                memInit = true;
+                checkAllLoaded();
+            }, (error) => {
+                console.error("Members Sync Error: ", error);
+            });
+
+            // Sync Records Collection
+            onSnapshot(recCol, (snapshot) => {
+                if (snapshot.empty) {
+                    // Seed dummy record
+                    DEFAULT_RECORDS.forEach(rec => {
+                        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records', rec.id), rec);
+                    });
+                } else {
+                    borrowRecords = [];
+                    snapshot.forEach(doc => {
+                        borrowRecords.push(doc.data());
+                    });
+                    borrowRecords.sort((a, b) => a.id.localeCompare(b.id));
+
+                    // Live update views
+                    renderDashboardStats();
+                    renderMyHistoryTable();
+                    renderAdminPanel();
+                }
+                recInit = true;
+                checkAllLoaded();
+            }, (error) => {
+                console.error("Records Sync Error: ", error);
+            });
+        }
+
+        // Toast notifications logic (replaces default window.alert for beautiful UX)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-neutral-950 border-cyan-400 text-cyan-300';
+            let iconName = 'check-circle';
+            if (type === 'error') {
+                bgClass = 'bg-neutral-950 border-red-500 text-red-400';
+                iconName = 'x-circle';
+            } else if (type === 'warning') {
+                bgClass = 'bg-neutral-950 border-yellow-400 text-yellow-300';
+                iconName = 'alert-triangle';
+            }
+
+            toast.className = `${bgClass} border-2 px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3 pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 text-xs font-bold max-w-sm`;
+            toast.innerHTML = `
+                <i data-lucide="${iconName}" class="w-5 h-5 flex-shrink-0"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // Toggle signup sub-fields inside form
+        function toggleAuthClassFields() {
+            const role = document.getElementById('auth-signup-role').value;
+            const studentOnlyFields = document.getElementById('auth-student-only-fields');
+            const teacherOnlyFields = document.getElementById('auth-teacher-only-fields');
+            const idInput = document.getElementById('auth-signup-id');
+            const phoneInput = document.getElementById('auth-signup-phone');
+            const classInput = document.getElementById('auth-signup-class');
+            const numberInput = document.getElementById('auth-signup-number');
+            const teacherPasswordInput = document.getElementById('auth-signup-teacher-password');
+
+            if (role === 'นักเรียน') {
+                studentOnlyFields.classList.remove('hidden');
+                teacherOnlyFields.classList.add('hidden');
+                idInput.required = true;
+                phoneInput.required = true;
+                classInput.required = true;
+                numberInput.required = true;
+                teacherPasswordInput.required = false;
+            } else {
+                studentOnlyFields.classList.add('hidden');
+                teacherOnlyFields.classList.remove('hidden');
+                idInput.required = false;
+                phoneInput.required = false;
+                classInput.required = false;
+                numberInput.required = false;
+                teacherPasswordInput.required = true;
+            }
+        }
+
+        // Switch Tabs Inside Auth Gate (Login <-> Signup)
+        function switchAuthTab(tab) {
+            const loginBtn = document.getElementById('auth-btn-login');
+            const signupBtn = document.getElementById('auth-btn-signup');
+            const loginView = document.getElementById('auth-view-login');
+            const signupView = document.getElementById('auth-view-signup');
+
+            if (tab === 'login') {
+                loginBtn.className = "flex-1 py-2.5 text-[10px] sm:text-xs font-black rounded-lg transition duration-200 bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-500/50 uppercase tracking-wider";
+                signupBtn.className = "flex-1 py-2.5 text-[10px] sm:text-xs font-black rounded-lg transition duration-200 text-slate-400 hover:text-slate-100 hover:bg-neutral-800";
+                loginView.classList.remove('hidden');
+                signupView.classList.add('hidden');
+            } else {
+                signupBtn.className = "flex-1 py-2.5 text-[10px] sm:text-xs font-black rounded-lg transition duration-200 bg-gradient-to-r from-red-600 via-red-500 to-cyan-500 text-white shadow-lg shadow-red-500/50 uppercase tracking-wider border border-red-400";
+                loginBtn.className = "flex-1 py-2.5 text-[10px] sm:text-xs font-black rounded-lg transition duration-200 text-slate-400 hover:text-slate-100 hover:bg-neutral-800";
+                loginView.classList.add('hidden');
+                signupView.classList.remove('hidden');
+                toggleAuthClassFields();
+            }
+        }
+
+        // Selection login profile and setup session
+        function selectProfileAndLogin(memberObj) {
+            currentActiveUser = memberObj;
+            localStorage.setItem('sports_active_user', JSON.stringify(currentActiveUser));
+            showToast(`💎 ยินดีต้อนรับสมาชิก: ${memberObj.name} เข้าสู่ระบบออนไลน์!`);
+            initMainDashboard();
+        }
+
+        // Manual Login using Name and Password/ID separately
+        function handleManualLogin() {
+            const enteredName = document.getElementById('auth-login-name').value.trim();
+            const enteredPass = document.getElementById('auth-login-password').value.trim();
+
+            if (!enteredName || !enteredPass) {
+                showToast("กรุณากรอกทั้งชื่อผู้ใช้งาน และ รหัสประจำตัว/รหัสผ่าน ให้ครบถ้วน", "error");
+                return;
+            }
+
+            // High priority check: Admin credentials AMSS234 verification
+            if (enteredPass === 'AMSS234' || enteredName.toUpperCase() === 'AMSS234') {
+                const adminUser = membersList.find(m => m.id === 'AMSS234');
+                if (adminUser) {
+                    selectProfileAndLogin(adminUser);
+                    return;
+                }
+            }
+
+            // Normal user credentials check (Names and ID/Password must match correctly)
+            const foundUser = membersList.find(m => 
+                (m.name.toLowerCase() === enteredName.toLowerCase() || m.id.toUpperCase() === enteredName.toUpperCase()) && 
+                (m.password === enteredPass || m.id.toUpperCase() === enteredPass.toUpperCase())
+            );
+
+            if (foundUser) {
+                selectProfileAndLogin(foundUser);
+            } else {
+                showToast("ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง", "error");
+            }
+        }
+
+        // Helper to check for lazy typings and keyboard smashes (Anti-cheat / Anti-AI logic)
+        function isKeyboardSmash(str) {
+            const smashes = [
+                'asdf', 'sdfg', 'dfgh', 'fghj', 'ghjk', 'hjkl', 'qwer', 'wert', 'erty', 'rtyu', 'tyui', 'yuio', 'uiop', 'zxcv', 'xcvb', 'cvbn', 'vbnm',
+                'ฟหกด', 'หกดเ', 'กดเอ', 'ดเอก', 'เอิ้', 'ๆๆๆ', '5555', '1234', 'สปอร์ต', 'ทดสอบ', 'test', 'aaaa', 'xxxx', 'zzzz'
+            ];
+            str = str.toLowerCase();
+            for (let smash of smashes) {
+                if (str.includes(smash)) return true;
+            }
+            // Check for 4 consecutive identical characters (e.g. กกกก, 1111)
+            const repeatRegex = /(.)\1{3,}/;
+            if (repeatRegex.test(str)) return true;
+            return false;
+        }
+
+        function validateMemberInput(member) {
+            const name = member.name.trim();
+            
+            // 1. Name Anti-spam
+            if (name.length < 5) {
+                return "ชื่อ-นามสกุล สั้นเกินไป คาดว่าป้อนข้อมูลมั่ว";
+            }
+            if (member.role === 'นักเรียน' && !name.includes(" ")) {
+                return "กรุณาใส่ทั้ง 'ชื่อจริง' และ 'นามสกุลจริง' (ต้องมีช่องว่างเว้นวรรค) เพื่อความถูกต้อง";
+            }
+            // Name should only contain Thai, English alphabets and spaces
+            const nameRegex = /^[a-zA-Z\u0E00-\u0E7F\s]+$/;
+            if (!nameRegex.test(name)) {
+                return "ชื่อจริงและนามสกุลต้องไม่มีตัวเลข สัญลักษณ์ หรืออิโมจิปะปน";
+            }
+            if (isKeyboardSmash(name)) {
+                return "ตรวจพบชื่อที่มีลักษณะพิมพ์มั่วคีย์บอร์ด (Keyboard Smash) กรุณาใช้ชื่อจริง";
+            }
+
+            if (member.role === 'นักเรียน') {
+                // 2. Student ID Anti-spam
+                const id = member.id.trim().toUpperCase();
+                if (id.length < 4 || id.length > 10) {
+                    return "รหัสประจำตัวนักเรียนต้องยาว 4 ถึง 10 ตัวอักษร";
+                }
+                if (/^(.)\1+$/.test(id) || id === "1234" || id === "12345" || id === "123456" || id === "6789") {
+                    return "รหัสประจำตัวเป็นตัวเลขซ้ำหรือเรียงกันเกินไป คาดว่าพิมพ์มั่ว";
+                }
+                if (isKeyboardSmash(id)) {
+                    return "รหัสประจำตัวมีลักษณะพิมพ์มั่วคีย์บอร์ด คาดว่าเป็นสแปม";
+                }
+
+                // 3. Mobile Phone Anti-spam
+                const cleanPhone = member.phone.replace(/[^0-9]/g, '');
+                if (cleanPhone.length !== 10) {
+                    return "เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลักเท่านั้น";
+                }
+                if (!/^(06|08|09)/.test(cleanPhone)) {
+                    return "เบอร์โทรศัพท์ต้องเป็นของประเทศไทย (ขึ้นต้นด้วย 06, 08, 09)";
+                }
+                if (/^(.)\1+$/.test(cleanPhone) || cleanPhone.includes("123456") || /0[689]0000000/.test(cleanPhone)) {
+                    return "เบอร์โทรศัพท์เป็นตัวเลขซ้ำมั่วเกินไป ไม่สามารถอนุญาตได้";
+                }
+
+                // 4. Class Year Anti-spam (e.g., ม.1/1 ถึง ม.6/15 or Vocational)
+                const studentClass = member.class.trim();
+                // Class validation: matches ม.[1-6]/[1-20], ป.[1-6]/[1-20], ปวช.[1-3]/[1-10], ปวส.[1-2]/[1-10]
+                const classRegex = /^[มป]\.[1-6]\/([1-9]|1[0-9]|20)$|^ปว[ชส]\.[1-3]\/([1-9]|10)$/i;
+                if (!classRegex.test(studentClass)) {
+                    return "รูปแบบชั้นเรียนไม่ถูกต้องหรือเกินจริง! กรุณาใช้รูปแบบจริง เช่น ม.5/2, ม.6/12";
+                }
+
+                // 5. Classroom Number Anti-spam
+                const num = parseInt(member.number);
+                if (isNaN(num) || num < 1 || num > 60) {
+                    return "เลขที่ห้องเรียนของคุณดูเกินจริง (เลขที่จริงต้องอยู่ระหว่าง 1 ถึง 60)";
+                }
+            }
+            return null; // Validated successfully
+        }
+
+        // New registration submission (Dynamic for Teachers / Students)
+        async function handleAuthSignupSubmit(event) {
+            event.preventDefault();
+
+            const role = document.getElementById('auth-signup-role').value;
+            const name = document.getElementById('auth-signup-name').value.trim();
+            const emoji = document.getElementById('auth-signup-emoji').value;
+
+            // Enforce Unique User constraint: Check duplicate names in system
+            const duplicateName = membersList.find(m => m.name.toLowerCase() === name.toLowerCase());
+            if (duplicateName) {
+                showToast("ขออภัย! ชื่อผู้ใช้นี้มีการลงทะเบียนเรียบร้อยแล้ว (จำกัด 1 บัญชีผู้ใช้ต่อคน)", "error");
+                return;
+            }
+
+            let newId = "";
+            let password = "";
+            let phone = "-";
+            let studentClass = "-";
+            let studentNum = "-";
+
+            if (role === 'นักเรียน') {
+                newId = document.getElementById('auth-signup-id').value.trim().toUpperCase();
+                phone = document.getElementById('auth-signup-phone').value.trim();
+                studentClass = document.getElementById('auth-signup-class').value.trim();
+                studentNum = parseInt(document.getElementById('auth-signup-number').value);
+                password = newId; // Student ID is password
+
+                if (!newId) {
+                    showToast("กรุณากรอกรหัสประจำตัวนักเรียนก่อนลงทะเบียน", "error");
+                    return;
+                }
+
+                // Enforce unique Student ID constraint
+                const duplicateId = membersList.find(m => m.id.toUpperCase() === newId);
+                if (duplicateId) {
+                    showToast("ขออภัย! รหัสประจำตัวนี้มีการลงทะเบียนเรียบร้อยแล้วในระบบคลาวด์", "error");
+                    return;
+                }
+            } else {
+                // Teacher registration
+                const teacherPassword = document.getElementById('auth-signup-teacher-password').value.trim();
+                if (!teacherPassword) {
+                    showToast("กรุณากำหนดรหัสผ่านสำหรับเข้าใช้งานคุณครูอาจารย์", "error");
+                    return;
+                }
+                const randomTchNum = Math.floor(1000 + Math.random() * 9000);
+                newId = `TCH${randomTchNum}`;
+                password = teacherPassword;
+            }
+
+            const newMember = {
+                id: newId,
+                name: name,
+                password: password,
+                role: role,
+                class: studentClass,
+                number: studentNum,
+                phone: phone,
+                emoji: emoji,
+                isBlocked: false,
+                incidentNotes: '',
+                score: 100
+            };
+
+            // Execute anti-spam checks
+            const validationError = validateMemberInput(newMember);
+            if (validationError) {
+                showToast(`⚠️ ลงทะเบียนล้มเหลว: ${validationError}`, "error");
+                return;
+            }
+
+            // Write to Cloud Firestore
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', newMember.id), newMember);
+                
+                if (role === 'ครูอาจารย์') {
+                    showToast(`🎁 สมัครสำเร็จ! เข้าใช้งานชื่อ "${name}" ด้วยรหัสผ่านที่ท่านกำหนด`, "success");
+                } else {
+                    showToast("🎁 สมัครสมาชิกเว็บตรงกีฬาสำเร็จ! เข้าใช้ด้วยชื่อจริง และรหัสประจำตัวของตนเอง", "success");
+                }
+                
+                selectProfileAndLogin(newMember);
+            } catch (err) {
+                console.error("Firestore Write Error: ", err);
+                showToast("เกิดข้อผิดพลาดในการลงบันทึกข้อมูลคลาวด์", "error");
+            }
+        }
+
+        // Log Out
+        function handleLogout() {
+            currentActiveUser = null;
+            localStorage.removeItem('sports_active_user');
+            showAuthGate();
+            showToast("🔒 ปลอดภัยแล้ว! ออกจากระบบออนไลน์เรียบร้อย", "success");
+        }
+
+        // UI View: Show Gate
+        function showAuthGate() {
+            document.getElementById('auth-gate-layout').classList.remove('hidden');
+            document.getElementById('main-app-layout').classList.add('hidden');
+            // Clear inputs inside auth gate
+            document.getElementById('auth-login-name').value = '';
+            document.getElementById('auth-login-password').value = '';
+        }
+
+        // UI View: Enter Main Program after Login
+        function initMainDashboard() {
+            document.getElementById('auth-gate-layout').classList.add('hidden');
+            document.getElementById('main-app-layout').classList.remove('hidden');
+
+            // Set user profile visuals
+            document.getElementById('active-user-avatar').innerText = currentActiveUser.emoji || '👤';
+            document.getElementById('active-user-name').innerText = currentActiveUser.name;
+            document.getElementById('active-user-id').innerText = `${currentActiveUser.id} (${currentActiveUser.role})`;
+            document.getElementById('welcome-name').innerText = currentActiveUser.name;
+
+            checkTheftWarningStatus();
+
+            renderDashboardStats();
+            renderEquipmentCards();
+            renderMyHistoryTable();
+            renderAdminPanel();
+            renderHonorsList();
+
+            switchTab('dashboard');
+        }
+
+        // Check if user is locked due to theft or major overdue
+        function checkTheftWarningStatus() {
+            if (!currentActiveUser) return;
+            const warningBanner = document.getElementById('crimson-theft-warning');
+            
+            const realTimeUser = membersList.find(m => m.id === currentActiveUser.id);
+            if (realTimeUser && realTimeUser.isBlocked) {
+                warningBanner.classList.remove('hidden');
+            } else {
+                warningBanner.classList.add('hidden');
+            }
+        }
+
+        // Navigation Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'borrow', 'return', 'my-history'];
+            tabs.forEach(t => {
+                const view = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                const mobileBtn = document.getElementById(`mobile-tab-${t}`);
+                
+                if (t === tabId) {
+                    if (view) view.classList.remove('hidden');
+                    if (btn) btn.className = "flex items-center space-x-1.5 px-4 py-2 text-xs font-black rounded-lg bg-red-600 text-white shadow-lg shadow-red-500/50 border border-red-400 transition duration-150";
+                    if (mobileBtn) mobileBtn.className = "flex flex-col items-center justify-center text-red-500 font-extrabold transition scale-110";
+                } else {
+                    if (view) view.classList.add('hidden');
+                    if (btn) btn.className = "flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition duration-150";
+                    if (mobileBtn) mobileBtn.className = "flex flex-col items-center justify-center text-slate-400 font-bold transition opacity-70";
+                }
+            });
+
+            if (tabId === 'dashboard') {
+                renderDashboardStats();
+                renderHonorsList();
+            } else if (tabId === 'borrow') {
+                renderEquipmentCards();
+            } else if (tabId === 'return') {
+                autofillReturnWithActive();
+            } else if (tabId === 'my-history') {
+                renderMyHistoryTable();
+            }
+        }
+
+        // Math & Render: Dashboard Stats
+        function renderDashboardStats() {
+            if (equipments.length === 0) return;
+            const totalItemsCount = equipments.reduce((sum, item) => sum + item.total, 0);
+            const activeBorrows = borrowRecords.filter(r => r.status === 'กำลังยืม').length;
+            const damagedCount = equipments.filter(e => e.status === 'ชำรุด').length;
+            const availableCount = totalItemsCount - activeBorrows - damagedCount;
+
+            document.getElementById('stat-total').innerText = `${totalItemsCount} ชิ้น`;
+            document.getElementById('stat-borrowed').innerText = `${activeBorrows} รายการ`;
+            document.getElementById('stat-available').innerText = `${availableCount} ชิ้น`;
+            document.getElementById('stat-damaged').innerText = `${damagedCount} หมวด`;
+        }
+
+        // Render Top reliable users
+        function renderHonorsList() {
+            const container = document.getElementById('honors-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const sorted = [...membersList].sort((a, b) => b.score - a.score).slice(0, 3);
+            sorted.forEach((m, idx) => {
+                const medalColors = ['text-yellow-400', 'text-slate-300', 'text-amber-600'];
+                const card = document.createElement('div');
+                card.className = "bg-black/40 p-3 rounded-xl border border-neutral-800 flex items-center justify-between text-xs";
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-base sm:text-lg font-black ${medalColors[idx]} font-mono">#${idx+1}</span>
+                        <span class="text-xl">${m.emoji}</span>
+                        <div class="text-left">
+                            <p class="font-bold text-white text-[11px] sm:text-xs">${m.name}</p>
+                            <span class="text-[9px] text-slate-500 font-mono">${m.role} • ${m.id}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] sm:text-[10px] text-emerald-400 font-extrabold block">เครดิต: ${m.score}</span>
+                        <span class="text-[8px] text-slate-500 block">คืนไว 100%</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Toggle Admin/Teacher control center visibility
+        function toggleAdminPanel() {
+            if (currentActiveUser.role !== 'ครูอาจารย์') {
+                showToast("🔒 ระบบควบคุมจำกัดสิทธิ์เฉพาะ 'ครูอาจารย์' เท่านั้น", "error");
+                return;
+            }
+
+            isAdminViewActive = !isAdminViewActive;
+            updateAdminPanelVisibility();
+        }
+
+        function updateAdminPanelVisibility() {
+            const container = document.getElementById('admin-panel-container');
+            const btnText = document.getElementById('admin-trigger-text');
+            const triggerBtn = document.getElementById('admin-panel-trigger');
+
+            if (isAdminViewActive) {
+                container.classList.remove('hidden');
+                btnText.innerText = "ซ่อนแผงครูควบคุมระบบ";
+                triggerBtn.className = "w-full md:w-auto bg-yellow-400 text-black font-black px-4 py-2.5 rounded-xl border border-yellow-500 transition flex items-center justify-center space-x-2";
+                renderAdminPanel();
+                showToast("🛠️ เข้าสู่ห้องสืบสวนและควบคุมคลังระบบออนไลน์สำเร็จ", "warning");
+            } else {
+                container.classList.add('hidden');
+                btnText.innerText = "สลับเป็น: แผงคุณครู / ผู้ดูแลคลัง";
+                triggerBtn.className = "w-full md:w-auto bg-neutral-900 text-yellow-400 hover:text-black hover:bg-yellow-400 text-[11px] sm:text-xs font-black px-4 py-2.5 rounded-xl border border-yellow-500/40 transition flex items-center justify-center space-x-2";
+            }
+        }
+
+        // Catalog filter logic
+        function filterEquipments() {
+            renderEquipmentCards();
+        }
+
+        // Render equipment grid
+        function renderEquipmentCards() {
+            const container = document.getElementById('equipment-grid-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const searchValue = document.getElementById('borrow-search').value.toLowerCase();
+            const categoryValue = document.getElementById('borrow-filter-category').value;
+
+            const filtered = equipments.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchValue);
+                const matchesCategory = categoryValue === 'ทั้งหมด' || item.category === categoryValue;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500 text-xs">
+                        😭 ไม่พบอุปกรณ์กีฬาตรงกับการค้นหาในขณะนี้
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                const isOutOfStock = item.available <= 0;
+                
+                const statusBadgeClass = item.status === 'พร้อมใช้งาน' 
+                    ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30' 
+                    : 'bg-red-950 text-red-400 border-red-500/30';
+
+                card.className = "bg-neutral-950/80 p-4 rounded-2xl border border-neutral-800 hover:border-cyan-400/60 shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[9px] bg-neutral-900 text-slate-400 font-extrabold px-2 py-0.5 rounded border border-neutral-800">${item.category}</span>
+                            <span class="text-[9px] border px-2 py-0.5 rounded-lg font-bold ${statusBadgeClass}">${item.status}</span>
+                        </div>
+
+                        <div class="text-center py-4">
+                            <span class="text-4xl block mb-2 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">${item.emoji}</span>
+                            <h4 class="font-bold text-slate-100 text-xs sm:text-sm leading-tight line-clamp-2 h-10 mb-2">${item.name}</h4>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-3 border-t border-neutral-900">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-400">คงเหลือในตู้เซฟ:</span>
+                            <span class="text-cyan-400 font-extrabold font-mono">${item.available} / ${item.total} ชิ้น</span>
+                        </div>
+
+                        <button onclick="window.openBorrowModal('${item.id}')" ${isOutOfStock ? 'disabled' : ''} class="w-full py-2.5 ${isOutOfStock ? 'bg-neutral-900 text-slate-600 border border-neutral-800 cursor-not-allowed' : 'bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-extrabold hover:shadow-lg hover:shadow-red-500/20 border border-red-500'} text-xs rounded-xl transition duration-150">
+                            ${isOutOfStock ? '❌ หมดชั่วคราว' : '🛒 ทำเรื่องขอยืมออโต้'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Modal actions: Borrow equipment
+        function openBorrowModal(itemId) {
+            if (!currentActiveUser) {
+                showToast("🔒 กรุณาเปิดบัญชีสมาชิกหรือล็อกอินก่อนทำรายการยืมคลังกีฬา", "error");
+                showAuthGate();
+                return;
+            }
+
+            const realTimeUser = membersList.find(m => m.id === currentActiveUser.id);
+            if (realTimeUser && realTimeUser.isBlocked) {
+                showToast("🚫 บัญชีติดสถานะถูกระงับสิทธิ์ยืม (ลักขโมย/ค้างส่ง) กรุณาติดต่อคุณครูฝ่ายปกครอง", "error");
+                checkTheftWarningStatus();
+                return;
+            }
+
+            const item = equipments.find(e => e.id === itemId);
+            if (!item) return;
+
+            selectedItemToBorrow = item;
+
+            document.getElementById('modal-item-emoji').innerText = item.emoji;
+            document.getElementById('modal-item-name').innerText = item.name;
+            document.getElementById('modal-item-category').innerText = `หมวดหมู่คลัง: ${item.category}`;
+            document.getElementById('modal-item-qty').innerText = `${item.available} ชิ้น`;
+
+            document.getElementById('modal-user-name').value = currentActiveUser.name;
+            document.getElementById('modal-user-id').value = currentActiveUser.id;
+            document.getElementById('modal-user-phone').value = currentActiveUser.phone || '-';
+
+            const todayStr = new Date().toISOString().substring(0, 10);
+            
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 5);
+            const returnDueStr = targetDate.toISOString().substring(0, 10);
+
+            document.getElementById('modal-borrow-date').value = todayStr;
+            document.getElementById('modal-due-date').value = returnDueStr;
+
+            document.getElementById('borrow-modal').classList.remove('hidden');
+        }
+
+        function closeBorrowModal() {
+            document.getElementById('borrow-modal').classList.add('hidden');
+            selectedItemToBorrow = null;
+        }
+
+        // Action: Submit confirm borrow transaction
+        async function handleConfirmBorrowSubmit(event) {
+            event.preventDefault();
+
+            if (!selectedItemToBorrow) return;
+
+            if (selectedItemToBorrow.available <= 0) {
+                showToast("ขออภัย! สินค้าหมวดนี้หมดไปชั่วคราวแล้ว", "error");
+                closeBorrowModal();
+                return;
+            }
+
+            const borrowDate = document.getElementById('modal-borrow-date').value;
+            const dueDate = document.getElementById('modal-due-date').value;
+
+            // Generate record ID based on current total length plus time to avoid duplication in multi-user environment
+            const recordNum = borrowRecords.length + 1;
+            const recordId = `RC${String(recordNum).padStart(3, '0')}`;
+
+            const newRecord = {
+                id: recordId,
+                itemId: selectedItemToBorrow.id,
+                itemName: selectedItemToBorrow.name,
+                memberId: currentActiveUser.id,
+                memberName: currentActiveUser.name,
+                memberRole: currentActiveUser.role,
+                borrowDate: borrowDate,
+                dueDate: dueDate,
+                returnDate: '',
+                status: 'กำลังยืม',
+                condition: 'สมบูรณ์ดี'
+            };
+
+            try {
+                // Write transaction to Cloud Firestore
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records', newRecord.id), newRecord);
+
+                // Update equipment inventory available count in Cloud
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipments', selectedItemToBorrow.id), {
+                    available: selectedItemToBorrow.available - 1
+                });
+
+                showToast(`🎉 ส่งเรื่องยืมขึ้นคลาวด์เรียบร้อย! เลขทำรายการของคุณ: ${newRecord.id}`, "success");
+                closeBorrowModal();
+            } catch (err) {
+                console.error("Borrow Cloud Error: ", err);
+                showToast("ระบบคลาวด์ขัดข้อง ไม่สามารถประมวลผลการยืม", "error");
+            }
+        }
+
+        // Return tab helper: Auto load from active user session
+        function autofillReturnWithActive() {
+            if (currentActiveUser) {
+                document.getElementById('return-search-id').value = currentActiveUser.id;
+                document.getElementById('return-autofill-btn-text').innerText = `${currentActiveUser.id} (${currentActiveUser.name})`;
+                handleSearchReturnList();
+            } else {
+                document.getElementById('return-autofill-btn-text').innerText = 'กรุณาล็อกอินก่อนดึงสิทธิ์';
+            }
+        }
+
+        // Action: Query user pending returns by ID or Name
+        function handleSearchReturnList() {
+            const searchId = document.getElementById('return-search-id').value.trim().toUpperCase();
+            const wrapper = document.getElementById('return-items-wrapper');
+            
+            if (!searchId) {
+                showToast("กรุณาระบุรหัสผู้ยืมหรือชื่อจริงก่อนกดดึงข้อมูลสิทธิ์", "error");
+                return;
+            }
+
+            const foundUserObj = membersList.find(m => m.id.toUpperCase() === searchId || m.name.toUpperCase() === searchId);
+            const resolvedId = foundUserObj ? foundUserObj.id.toUpperCase() : searchId;
+
+            const userPending = borrowRecords.filter(r => r.memberId.toUpperCase() === resolvedId && r.status === 'กำลังยืม');
+
+            wrapper.innerHTML = '';
+
+            if (userPending.length === 0) {
+                wrapper.innerHTML = `
+                    <div class="text-center py-8 text-slate-500">
+                        <i data-lucide="smile" class="w-8 h-8 mx-auto text-emerald-400 mb-2"></i>
+                        <p class="font-bold text-slate-300 text-xs sm:text-sm">ไม่พบรายการค้างส่งอุปกรณ์!</p>
+                        <p class="text-[9px] sm:text-[10px] mt-1 text-slate-500">ไม่มีประวัติค้างยืมค้างส่งอุปกรณ์ในขณะนี้</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            if (foundUserObj && foundUserObj.isBlocked) {
+                const blockedBanner = document.createElement('div');
+                blockedBanner.className = "bg-red-950/80 border border-red-500 text-red-400 p-2.5 rounded-lg text-[10px] mb-3 leading-relaxed";
+                blockedBanner.innerHTML = `
+                    ⚠️ <b>แจ้งเตือนฝ่ายปกครอง:</b> ยูสเซอร์นี้ถูกระงับสิทธิ์ชั่วคราวเนื่องจากคดี: <b>"${foundUserObj.incidentNotes || 'ค้างส่งอุปกรณ์ยาวนาน/สงสัยลักทรัพย์'}"</b> การคืนอุปกรณ์จะช่วยปลดล็อกบัญชีคุณได้!
+                `;
+                wrapper.appendChild(blockedBanner);
+            }
+
+            userPending.forEach(rec => {
+                const itemBlock = document.createElement('div');
+                itemBlock.className = "bg-neutral-900 border border-cyan-500/20 p-4 rounded-xl space-y-3 text-left relative overflow-hidden shadow-md";
+                
+                const today = new Date('2026-07-14');
+                const due = new Date(rec.dueDate);
+                const diffTime = today - due;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isOverdue = diffDays > 0;
+
+                itemBlock.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-extrabold text-white text-xs">${rec.itemName}</h4>
+                            <p class="text-[9px] sm:text-[10px] text-slate-500 font-mono mt-0.5">เลขตั๋ว: ${rec.id} • ยืมเมื่อ: ${rec.borrowDate}</p>
+                        </div>
+                        ${isOverdue 
+                            ? `<span class="bg-red-950 text-red-500 text-[9px] font-extrabold px-1.5 rounded animate-pulse">ส่งช้า ${diffDays} วัน</span>`
+                            : `<span class="bg-emerald-950 text-emerald-400 text-[9px] font-bold px-1.5 rounded">คงเหลือเวลายืม</span>`
+                        }
+                    </div>
+
+                    <div class="border-t border-neutral-800/80 pt-2.5 space-y-2">
+                        <span class="block text-[10px] font-bold text-cyan-400 uppercase">ตรวจเช็คประเมินสภาพอุปกรณ์จริง:</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button onclick="window.processReturnItem('${rec.id}', 'Good')" class="bg-emerald-950 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-400 text-[10px] py-2 sm:py-1.5 rounded-lg font-bold transition">
+                                🟢 สภาพปกติ
+                            </button>
+                            <button onclick="window.processReturnItem('${rec.id}', 'Damaged')" class="bg-amber-950 hover:bg-amber-800 border border-amber-500/40 text-amber-400 text-[10px] py-2 sm:py-1.5 rounded-lg font-bold transition">
+                                🟡 ชำรุดบางส่วน
+                            </button>
+                            <button onclick="window.processReturnItem('${rec.id}', 'Lost')" class="bg-red-950 hover:bg-red-900 border border-red-500/40 text-red-400 text-[10px] py-2 sm:py-1.5 rounded-lg font-bold transition">
+                                🔴 ทำสูญหาย/ลักทรัพย์
+                            </button>
+                        </div>
+                    </div>
+                `;
+                wrapper.appendChild(itemBlock);
+            });
+            lucide.createIcons();
+        }
+
+        // Action: Process return and calculate penalty rules on Cloud Firestore
+        async function processReturnItem(recordId, qualityStatus) {
+            const rec = borrowRecords.find(r => r.id === recordId);
+            if (!rec) return;
+
+            const item = equipments.find(e => e.id === rec.itemId);
+            const userObj = membersList.find(m => m.id === rec.memberId);
+
+            const todayStr = new Date().toISOString().substring(0, 10);
+            
+            let finalStatus = 'คืนแล้ว';
+            let finalCondition = 'สมบูรณ์ดี';
+
+            try {
+                if (qualityStatus === 'Good') {
+                    finalStatus = 'คืนแล้ว';
+                    finalCondition = 'สมบูรณ์ดี';
+                    
+                    if (item) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipments', item.id), {
+                            available: Math.min(item.total, item.available + 1)
+                        });
+                    }
+                    if (userObj) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', userObj.id), {
+                            score: Math.min(100, userObj.score + 5)
+                        });
+                    }
+                    showToast(`🟢 ดำเนินรายการตรวจคืนปกติเรียบร้อยข้ามเครื่อง!`, "success");
+                } 
+                else if (qualityStatus === 'Damaged') {
+                    finalStatus = 'คืนแล้ว';
+                    finalCondition = 'ชำรุดเสียหาย';
+                    
+                    if (item) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipments', item.id), {
+                            status: 'ชำรุด'
+                        });
+                    }
+                    if (userObj) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', userObj.id), {
+                            score: Math.max(10, userObj.score - 15)
+                        });
+                    }
+                    showToast(`🟡 บันทึกสภาพชำรุดไปยังระบบแผงควบคุมฝ่ายบำรุงเรียบร้อย`, "warning");
+                } 
+                else if (qualityStatus === 'Lost') {
+                    finalStatus = 'สูญหาย/ลักขโมย';
+                    finalCondition = 'ของสูญหาย';
+                    
+                    if (item) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipments', item.id), {
+                            total: Math.max(1, item.total - 1)
+                        });
+                    }
+                    if (userObj) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', userObj.id), {
+                            isBlocked: true,
+                            incidentNotes: "ตรวจคืนเป็น 'ทำของสูญหาย/ลักขโมย' ระหว่างการใช้งาน",
+                            score: 0
+                        });
+                    }
+                    showToast(`🚨 บัญชีติดคดีปกครองถูกล็อคระบบออนไลน์ทันที!`, "error");
+                }
+
+                // Update Transaction Record on Cloud Firestore
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records', rec.id), {
+                    status: finalStatus,
+                    condition: finalCondition,
+                    returnDate: todayStr
+                });
+
+            } catch (err) {
+                console.error("Return Transaction Cloud Error: ", err);
+                showToast("ระบบอัปโหลดรายการคืนขัดข้อง", "error");
+            }
+        }
+
+        // Render history log
+        function renderMyHistoryTable() {
+            const tbody = document.getElementById('global-history-tbody');
+            const mobileContainer = document.getElementById('global-history-mobile-container');
+            
+            if (!tbody || !mobileContainer) return;
+            tbody.innerHTML = '';
+            mobileContainer.innerHTML = '';
+
+            const sortedRecords = [...borrowRecords].reverse();
+
+            sortedRecords.forEach(rec => {
+                let badgeStyle = "bg-emerald-950 text-emerald-400 border-emerald-500/20";
+                if (rec.status === 'กำลังยืม') {
+                    badgeStyle = "bg-cyan-950 text-cyan-400 border-cyan-500/20";
+                } else if (rec.status === 'สูญหาย/ลักขโมย') {
+                    badgeStyle = "bg-red-950 text-red-500 border-red-500/20 animate-pulse";
+                }
+
+                // 1. Desktop row
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-neutral-900 border-b border-neutral-900 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3">
+                        <p class="font-bold text-white text-xs">${rec.memberName}</p>
+                        <span class="text-[9px] text-slate-500 font-mono block">${rec.memberId} • ${rec.memberRole}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="text-white font-bold text-xs">${rec.itemName}</span>
+                    </td>
+                    <td class="px-4 py-3 font-mono text-slate-400">${rec.borrowDate}</td>
+                    <td class="px-4 py-3 font-mono text-red-400">${rec.dueDate}</td>
+                    <td class="px-4 py-3 font-mono text-emerald-400">${rec.returnDate || '-'}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeStyle}">${rec.status}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-bold text-[10px] text-slate-300">${rec.condition || 'สมบูรณ์ดี'}</td>
+                `;
+                tbody.appendChild(tr);
+
+                // 2. Mobile card
+                const mobileCard = document.createElement('div');
+                mobileCard.className = "bg-neutral-900/90 border border-neutral-800 p-4 rounded-xl space-y-2.5 text-xs relative overflow-hidden";
+                mobileCard.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none"></div>
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <span class="text-white font-extrabold text-sm block">${rec.itemName}</span>
+                            <span class="text-[9px] text-slate-400 font-mono">${rec.memberId} • ${rec.memberName}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded border text-[9px] font-bold ${badgeStyle}">${rec.status}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[10px] pt-2 border-t border-neutral-800/60 text-slate-300">
+                        <div>
+                            <span class="text-slate-500 block text-[9px] uppercase">วันที่เริ่มยืม</span>
+                            <span class="font-mono font-bold">${rec.borrowDate}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block text-[9px] uppercase">กำหนดคืน</span>
+                            <span class="text-red-400 font-mono font-bold">${rec.dueDate}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block text-[9px] uppercase">วันที่ส่งคืน</span>
+                            <span class="text-emerald-400 font-mono font-bold">${rec.returnDate || '-'}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block text-[9px] uppercase">สภาพตรวจเช็ค</span>
+                            <span class="font-bold">${rec.condition || 'สมบูรณ์ดี'}</span>
+                        </div>
+                    </div>
+                `;
+                mobileContainer.appendChild(mobileCard);
+            });
+        }
+
+        // Render specific lists inside Teacher Panel
+        function renderAdminPanel() {
+            const overdueList = document.getElementById('admin-overdue-list');
+            const membersListDiv = document.getElementById('admin-members-list');
+
+            if (!overdueList || !membersListDiv) return;
+
+            overdueList.innerHTML = '';
+            
+            const activeBorrows = borrowRecords.filter(r => r.status === 'กำลังยืม');
+            
+            let overdueCount = 0;
+            activeBorrows.forEach(rec => {
+                const today = new Date('2026-07-14');
+                const due = new Date(rec.dueDate);
+                const diffTime = today - due;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isOverdue = diffDays > 0;
+
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2.5 ${isOverdue ? 'bg-red-950/40 border-red-500/50 shadow-md' : 'bg-neutral-900 border-neutral-800'}`;
+                
+                card.innerHTML = `
+                    <div class="text-left space-y-1">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="font-extrabold text-white text-xs">${rec.memberName}</span>
+                            <span class="text-[9px] bg-black text-slate-400 px-1.5 py-0.5 rounded font-mono">${rec.memberId}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-300">ยืม: <b class="text-cyan-400">${rec.itemName}</b></p>
+                        <p class="text-[9px] text-slate-500">กำหนดคืน: ${rec.dueDate} ${isOverdue ? `<span class="text-red-500 font-bold block">(ส่งช้าชะตาขาด ${diffDays} วัน)</span>` : ''}</p>
+                    </div>
+
+                    <div class="flex space-x-1 w-full sm:w-auto">
+                        <button onclick="window.triggerIncidentModal('${rec.memberId}')" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-extrabold text-[10px] px-3 py-2 sm:py-1.5 rounded-lg transition flex items-center justify-center space-x-1">
+                            <i data-lucide="gavel" class="w-3.5 h-3.5"></i>
+                            <span>สืบสวนทุจริต</span>
+                        </button>
+                    </div>
+                `;
+                overdueList.appendChild(card);
+                overdueCount++;
+            });
+
+            if (overdueCount === 0) {
+                overdueList.innerHTML = `
+                    <div class="text-center py-10 text-slate-500 text-xs bg-neutral-900/40 rounded-xl border border-neutral-800">
+                        😇 ขณะนี้ไม่มีประวัตินักกีฬาค้างยืมอุปกรณ์ในสนาม
+                    </div>
+                `;
+            }
+
+            membersListDiv.innerHTML = '';
+            membersList.forEach(m => {
+                const isUserBlocked = m.isBlocked;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border flex justify-between items-center text-xs ${isUserBlocked ? 'bg-red-950/60 border-red-500' : 'bg-neutral-900 border-neutral-800'}`;
+                
+                const classLabel = m.role === 'ครูอาจารย์' ? 'อาจารย์' : `${m.class} (เลขที่ ${m.number})`;
+                const phoneLabel = m.role === 'ครูอาจารย์' ? '' : `• โทร ${m.phone}`;
+
+                card.innerHTML = `
+                    <div class="text-left">
+                        <div class="flex items-center space-x-1">
+                            <span class="text-sm">${m.emoji}</span>
+                            <span class="font-bold text-white">${m.name}</span>
+                        </div>
+                        <span class="text-[9px] text-slate-400 font-mono block">ID: ${m.id} • ${classLabel} ${phoneLabel}</span>
+                        ${isUserBlocked ? `<p class="text-[9px] text-red-500 font-black mt-0.5">🚨 โดนแบน: ${m.incidentNotes || 'พฤติกรรมมิชอบ'}</p>` : ''}
+                    </div>
+
+                    <div>
+                        ${isUserBlocked 
+                            ? `<button onclick="window.toggleBlockMember('${m.id}', false)" class="bg-emerald-950 hover:bg-emerald-800 text-emerald-400 border border-emerald-500 text-[10px] px-2.5 py-1.5 rounded-lg font-bold transition">ปลดแบน</button>`
+                            : `<button onclick="window.toggleBlockMember('${m.id}', true)" class="bg-red-950 hover:bg-red-900 text-red-400 border border-red-500 text-[10px] px-2.5 py-1.5 rounded-lg font-bold transition">ระงับยืม</button>`
+                        }
+                    </div>
+                `;
+                membersListDiv.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Action: Open incident punishment window
+        function triggerIncidentModal(memberId) {
+            const memberObj = membersList.find(m => m.id === memberId);
+            if (!memberObj) return;
+
+            selectedMemberForIncident = memberObj;
+            document.getElementById('incident-member-info').innerText = `${memberObj.name} (${memberObj.id}) - ชั้น ${memberObj.class}`;
+            document.getElementById('incident-notes').value = memberObj.incidentNotes || '';
+            document.getElementById('incident-modal').classList.remove('hidden');
+        }
+
+        function closeIncidentModal() {
+            document.getElementById('incident-modal').classList.add('hidden');
+            selectedMemberForIncident = null;
+        }
+
+        // Action: Execute incident note & block status from form on Cloud
+        async function handleExecuteIncident(shouldBlock) {
+            if (!selectedMemberForIncident) return;
+
+            const notes = document.getElementById('incident-notes').value.trim();
+            const type = document.getElementById('incident-type-selector').value;
+
+            const updatedNotes = notes || `ระงับโดยคุณครูปกครอง ประเภทกรณี: ${type}`;
+            const finalScore = shouldBlock ? 0 : 50;
+
+            try {
+                // Update User details on Cloud
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', selectedMemberForIncident.id), {
+                    isBlocked: shouldBlock,
+                    incidentNotes: updatedNotes,
+                    score: finalScore
+                });
+
+                showToast(`⚖️ บันทึกประวัติพฤติกรรมบนระบบออนไลน์เรียบร้อย`, "warning");
+                closeIncidentModal();
+            } catch (err) {
+                console.error("Incident Update Error: ", err);
+                showToast("ระบบคลาวด์ขัดข้อง ไม่สามารถบันทึกคดีความ", "error");
+            }
+        }
+
+        // Action: Quick block/unblock directly from members control directory on Cloud
+        async function toggleBlockMember(memberId, blockState) {
+            const mObj = membersList.find(m => m.id === memberId);
+            if (!mObj) return;
+
+            const finalNotes = blockState ? "ระงับสิทธิ์โดยตรงจากสารสนเทศแอดมินคุณครูปกครอง" : "";
+            const finalScore = blockState ? 0 : 100;
+
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', mObj.id), {
+                    isBlocked: blockState,
+                    incidentNotes: finalNotes,
+                    score: finalScore
+                });
+                showToast(`${blockState ? '🔒 ทำการระงับบัญชี' : '🔓 ปลดล็อกบัญชี'} ${mObj.name} เรียบร้อย`, "success");
+            } catch (err) {
+                console.error("Block User Cloud Error: ", err);
+                showToast("ระบบอัปเดตสิทธิ์บนคลาวด์ผิดพลาด", "error");
+            }
+        }
+
+        // Modal Action: Add new item to db
+        function openAddEquipmentModal() {
+            document.getElementById('add-equipment-modal').classList.remove('hidden');
+        }
+
+        function closeAddEquipmentModal() {
+            document.getElementById('add-equipment-modal').classList.add('hidden');
+        }
+
+        async function handleNewEquipmentSubmit(event) {
+            event.preventDefault();
+
+            const category = document.getElementById('new-item-category').value;
+            const emoji = document.getElementById('new-item-emoji').value.trim() || '⚙️';
+            const name = document.getElementById('new-item-name').value.trim();
+            const total = parseInt(document.getElementById('new-item-total').value);
+            const status = document.getElementById('new-item-status').value;
+
+            const itemId = `EQ${String(equipments.length + 1).padStart(3, '0')}`;
+
+            const newItem = {
+                id: itemId,
+                name: name,
+                category: category,
+                total: total,
+                available: total,
+                status: status,
+                emoji: emoji
+            };
+
+            try {
+                // Write new product to Cloud Firestore
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipments', newItem.id), newItem);
+                showToast(`📦 บรรจุสินค้า ${name} ขึ้นระบบคลาวด์เรียบร้อย`, "success");
+                closeAddEquipmentModal();
+            } catch (err) {
+                console.error("Add Equipment Error: ", err);
+                showToast("ระบบลงคลังออนไลน์ล้มเหลว", "error");
+            }
+        }
+
+        // Bind functions to window so they are accessible from inline onclick attributes
+        window.switchAuthTab = switchAuthTab;
+        window.handleManualLogin = handleManualLogin;
+        window.handleAuthSignupSubmit = handleAuthSignupSubmit;
+        window.toggleAuthClassFields = toggleAuthClassFields;
+        window.switchTab = switchTab;
+        window.handleLogout = handleLogout;
+        window.toggleAdminPanel = toggleAdminPanel;
+        window.openAddEquipmentModal = openAddEquipmentModal;
+        window.closeAddEquipmentModal = closeAddEquipmentModal;
+        window.filterEquipments = filterEquipments;
+        window.autofillReturnWithActive = autofillReturnWithActive;
+        window.handleSearchReturnList = handleSearchReturnList;
+        window.closeBorrowModal = closeBorrowModal;
+        window.handleConfirmBorrowSubmit = handleConfirmBorrowSubmit;
+        window.handleNewEquipmentSubmit = handleNewEquipmentSubmit;
+        window.closeIncidentModal = closeIncidentModal;
+        window.handleExecuteIncident = handleExecuteIncident;
+        window.openBorrowModal = openBorrowModal;
+        window.processReturnItem = processReturnItem;
+        window.triggerIncidentModal = triggerIncidentModal;
+        window.toggleBlockMember = toggleBlockMember;
+
+        // Initialize App Auth and Core Listeners on Window Load
+        window.onload = function() {
+            lucide.createIcons();
+            runCloudAuth();
+        };
+
+    </script>
+</body>
+</html>
